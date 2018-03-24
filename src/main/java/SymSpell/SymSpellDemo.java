@@ -1,6 +1,4 @@
-package SymSpell;
-
-//MIT License
+package SymSpell;//        MIT License
 //
 //        Copyright (c) 2018 Hampus Londögård
 //
@@ -23,6 +21,7 @@ package SymSpell;
 //        SOFTWARE.
 
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.List;
@@ -32,25 +31,25 @@ public class SymSpellDemo {
     private int countIndex = 1;
     private String path ="data/frequency_dictionary_en_82_765.txt";
     private SymSpell.Verbosity suggestionVerbosity = SymSpell.Verbosity.All; //Top, Closest, All
-    int maxEditDistanceLookup = 3; //max edit distance per lookup (maxEditDistanceLookup<=maxEditDistanceDictionary)
+    private int maxEditDistanceLookup; //max edit distance per lookup (maxEditDistanceLookup<=maxEditDistanceDictionary)
     private SymSpell symSpell;
 
-    public SymSpellDemo(int maxEditDistanceLookup){
+    private SymSpellDemo(int maxEditDistanceLookup) throws FileNotFoundException {
         symSpell = new SymSpell(-1, maxEditDistanceLookup, -1, 10);//, (byte)18);
         this.maxEditDistanceLookup = maxEditDistanceLookup;
-        if(!symSpell.loadDictionary(path, termIndex, countIndex)) System.out.println("File not found");
+        if(!symSpell.loadDictionary(path, termIndex, countIndex))throw new FileNotFoundException("File not found");
     }
 
-    public List<SuggestItem> lookup(String input){
+    private List<SuggestItem> lookup(String input){
         return symSpell.lookup(input, suggestionVerbosity, maxEditDistanceLookup);
     }
 
-    public SuggestItem lookupCompound(String input){
+    private SuggestItem lookupCompound(String input){
         return symSpell.lookupCompound(input, maxEditDistanceLookup).get(0);
     }
 
     public static void main(String[] args) throws IOException {
-        SpellCheckerMain symSpell = new SpellCheckerMain(3);
+        SymSpellDemo symSpell = new SymSpellDemo(3);
         //verbosity=Top: the suggestion with the highest term frequency of the suggestions of smallest edit distance found
         //verbosity=Closest: all suggestions of smallest edit distance found, the suggestions are ordered by term frequency
         //verbosity=All: all suggestions <= maxEditDistance, the suggestions are ordered by edit distance, then by term frequency (slower, no early termination)
@@ -59,7 +58,6 @@ public class SymSpellDemo {
         String inputTerm;
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
         while(true){
-
             System.out.println("Enter input:");
             inputTerm = br.readLine();
             List<SuggestItem> suggestions = symSpell.lookup(inputTerm);
@@ -68,7 +66,7 @@ public class SymSpellDemo {
             suggestions.stream()
                     .limit(10)
                     .forEach(suggestion -> System.out.println("Lookup suggestion: " + suggestion.term + " " + suggestion.distance + " " + suggestion.count));
-            System.out.println("LookupCompound" + compound.term);
+            System.out.println("LookupCompound: " + compound.term);
         }
     }
 }

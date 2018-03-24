@@ -1,6 +1,4 @@
-package SymSpell;
-
-//MIT License
+package SymSpell;//        MIT License
 //
 //        Copyright (c) 2018 Hampus Londögård
 //
@@ -56,7 +54,7 @@ public class SymSpell {
     private Map<String, Long> belowThresholdWords = new HashMap<>();
     /// <summary>Spelling suggestion returned from lookup.</summary>
 
-    /// <summary>Create a new instanc of SymSpell.</summary>
+    /// <summary>Create a new instanc of SymSpell.SymSpell.</summary>
     /// <remarks>Specifying ann accurate initialCapacity is not essential,
     /// but it can help speed up processing by aleviating the need for
     /// data restructuring as the size grows.</remarks>
@@ -205,7 +203,7 @@ public class SymSpell {
 
         SuggestionStage staging = new SuggestionStage(16384);
         try (BufferedReader br = Files.newBufferedReader(Paths.get(corpus))) {
-            for (String line = null; (line = br.readLine()) != null; ) {
+            for (String line; (line = br.readLine()) != null; ) {
                 Arrays.stream(parseWords(line)).forEach(key -> createDictionaryEntry(key, 1, staging));
             }
         }catch (IOException ex){
@@ -224,16 +222,16 @@ public class SymSpell {
     /// <remarks>Used when you write your own process to load multiple words into the
     /// dictionary, and as part of that process, you first created a SuggestionsStage
     /// object, and passed that to createDictionaryEntry calls.</remarks>
-    /// <param name="staging">The SuggestionStage object storing the staged data.</param>
+    /// <param name="staging">The SymSpell.SuggestionStage object storing the staged data.</param>
     public void commitStaged(SuggestionStage staging) {
         staging.commitTo(deletes);
     }
 
     /// <summary>Find suggested spellings for a given input word, using the maximum
-    /// edit distance specified during construction of the SymSpell dictionary.</summary>
+    /// edit distance specified during construction of the SymSpell.SymSpell dictionary.</summary>
     /// <param name="input">The word being spell checked.</param>
     /// <param name="verbosity">The value controlling the quantity/closeness of the retuned suggestions.</param>
-    /// <returns>A List of SuggestItem object representing suggested correct spellings for the input word,
+    /// <returns>A List of SymSpell.SuggestItem object representing suggested correct spellings for the input word,
     /// sorted by edit distance, and secondarily by count frequency.</returns>
     public List<SuggestItem> lookup(String input, Verbosity verbosity) {
         return lookup(input, verbosity, maxDictionaryEditDistance);
@@ -242,7 +240,7 @@ public class SymSpell {
     /// <param name="input">The word being spell checked.</param>
     /// <param name="verbosity">The value controlling the quantity/closeness of the retuned suggestions.</param>
     /// <param name="maxEditDistance">The maximum edit distance between input and suggested words.</param>
-    /// <returns>A List of SuggestItem object representing suggested correct spellings for the input word,
+    /// <returns>A List of SymSpell.SuggestItem object representing suggested correct spellings for the input word,
     /// sorted by edit distance, and secondarily by count frequency.</returns>
     public List<SuggestItem> lookup(String input, Verbosity verbosity, int maxEditDistance) {
         //verbosity=Top: the suggestion with the highest term frequency of the suggestions of smallest edit distance found
@@ -524,88 +522,6 @@ public class SymSpell {
     public List<SuggestItem> lookupCompound(String input)
     {
         return lookupCompound(input, this.maxDictionaryEditDistance);
-    }
-
-
-    /// <summary>An intentionally opacque class used to temporarily stage
-    /// dictionary data during the adding of many words. By staging the
-    /// data during the building of the dictionary data, significant savings
-    /// of time can be achieved, as well as a reduction in final memory usage.</summary>
-    public class SuggestionStage {
-        public SuggestionStage(int initialCapacity) {
-            deletes = new HashMap<>(initialCapacity);
-            nodes = new ChunkArray<>(initialCapacity * 2);
-        }
-
-        public class Node {
-            public String suggestion;
-            public int next;
-            public Node(String suggestion, int next) {
-                this.suggestion = suggestion;
-                this.next = next;
-            }
-        }
-        public class Entry {
-            public int count;
-            public int first;
-            public Entry(int count, int first) {
-                this.count = count;
-                this.first = first;
-            }
-        }
-        public Map<Integer, Entry> deletes; // {get; set; }
-        public ChunkArray<Node> nodes;
-        /// <summary>Create a new instance of SuggestionStage.</summary>
-        /// <remarks>Specifying ann accurate initialCapacity is not essential,
-        /// but it can help speed up processing by aleviating the need for
-        /// data restructuring as the size grows.</remarks>
-        /// <param name="initialCapacity">The expected number of words that will be added.</param>
-
-        /// <summary>Gets the count of unique delete words.</summary>
-        public int deleteCount() { return deletes.size(); }
-        /// <summary>Gets the total count of all suggestions for all deletes.</summary>
-        public int nodeCount() { return nodes.count; }
-        /// <summary>Clears all the data from the SuggestionStaging.</summary>
-        public void clear() {
-            deletes.clear();
-            nodes.clear();
-        }
-
-        private void add(int deleteHash, String suggestion) {
-            Entry entry = deletes.getOrDefault(deleteHash, new Entry(0, -1));
-            int next = entry.first;
-            entry.count++;
-            entry.first = nodes.count;
-            deletes.put(deleteHash, entry);
-            nodes.add(new Node(suggestion, next));
-        }
-
-        private void commitTo(Map<Integer, String[]> permanentDeletes) {
-            deletes.forEach((key, value) -> {
-                int i;
-                String[] suggestions;
-                if (permanentDeletes.containsKey(key)) {
-                    suggestions = permanentDeletes.get(key);
-                    i = suggestions.length;
-                    String[] newSuggestion = Arrays.copyOf(suggestions, i + value.count);
-
-                    permanentDeletes.put(key, newSuggestion);
-                    suggestions = newSuggestion;
-                } else {
-                    i = 0;
-                    suggestions = new String[value.count];
-                    permanentDeletes.put(key, suggestions);
-                }
-                int next = value.first;
-                Node node;
-                while (next >= 0) {
-                    node = nodes.getValues(next);
-                    suggestions[i] = node.suggestion;
-                    next = node.next;
-                    i++;
-                }
-            });
-        }
     }
 
     private boolean deleteInSuggestionPrefix(String delete, int deleteLen, String suggestion, int suggestionLen) {

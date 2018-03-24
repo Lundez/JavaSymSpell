@@ -1,6 +1,4 @@
-package SymSpell;
-
-//MIT License
+package SymSpell;//        MIT License
 //
 //        Copyright (c) 2018 Hampus Londögård
 //
@@ -33,17 +31,15 @@ public class EditDistance {
     /// <summary>Create a new EditDistance object.</summary>
     /// <param name="baseString">The base string to which other strings will be compared.</param>
     /// <param name="algorithm">The desired edit distance algorithm.</param>
-   public EditDistance(String baseString, DistanceAlgorithm algorithm)
+    EditDistance(String baseString, DistanceAlgorithm algorithm)
     {
         this.baseString = baseString;
         this.algorithm = algorithm;
-        if (this.baseString == "")
-        {
+        if (this.baseString.isEmpty()) {
             this.baseString = null;
             return;
         }
-        if (algorithm == DistanceAlgorithm.Damerau)
-        {
+        if (algorithm == DistanceAlgorithm.Damerau) {
             v0 = new int[baseString.length()];
             v2 = new int[baseString.length()]; // stores one level further back (offset by +1 position)
         }
@@ -53,8 +49,7 @@ public class EditDistance {
     /// <param name="string2">The string to compare.</param>
     /// <param name="maxDistance">The maximum distance allowed.</param>
     /// <returns>The edit distance (or -1 if maxDistance exceeded).</returns>
-    public int compare(String string2, int maxDistance)
-    {
+    public int compare(String string2, int maxDistance) {
         switch (algorithm) {
             case Damerau: return DamerauLevenshteinDistance(string2, maxDistance);
         }

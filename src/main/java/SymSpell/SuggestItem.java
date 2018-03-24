@@ -1,6 +1,4 @@
-package SymSpell;
-
-//MIT License
+package SymSpell;//        MIT License
 //
 //        Copyright (c) 2018 Hampus Londögård
 //
@@ -22,8 +20,6 @@ package SymSpell;
 //        OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //        SOFTWARE.
 
-import org.jetbrains.annotations.NotNull;
-
 import java.util.Comparator;
 
 public class SuggestItem implements Comparator<SuggestItem>, Comparable<SuggestItem>
@@ -35,7 +31,7 @@ public class SuggestItem implements Comparator<SuggestItem>, Comparable<SuggestI
     /// <summary>Frequency of suggestion in the dictionary (a measure of how common the word is).</summary>
     public long count;
 
-    /// <summary>Create a new instance of SuggestItem.</summary>
+    /// <summary>Create a new instance of SymSpell.SuggestItem.</summary>
     /// <param name="term">The suggested word.</param>
     /// <param name="distance">Edit distance from search word.</param>
     /// <param name="count">Frequency of suggestion in dictionary.</param>
@@ -68,7 +64,7 @@ public class SuggestItem implements Comparator<SuggestItem>, Comparable<SuggestI
     }
 
     @Override
-    public int compareTo(@NotNull SuggestItem other) {
+    public int compareTo(SuggestItem other) {
         // order by distance ascending, then by frequency count descending
         if (this.distance == other.distance) return Long.compare(other.count, this.count);
         return Integer.compare(this.distance, other.distance);
