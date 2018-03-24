@@ -1,6 +1,6 @@
 package SymSpell;
 
-//        MIT License
+//MIT License
 //
 //        Copyright (c) 2018 Hampus Londögård
 //
@@ -21,6 +21,7 @@ package SymSpell;
 //        LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //        OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //        SOFTWARE.
+
 import  SymSpell.SymSpell.SuggestionStage.Node;
 import java.util.Arrays;
 
@@ -30,10 +31,10 @@ import java.util.Arrays;
 // to copy the entire backing array contents from the old backing array to the new.
 public class ChunkArray<T>
 {
-    private static int chunkSize = 4096;//this must be a power of 2, otherwise can't optimize row and col functions
-    private static int divShift = 12;   // number of bits to shift right to do division by chunkSize (the bit position of chunkSize)
-    public Node[][] values;             // Note: Node (SuggestionStage.Node) is found in SymSpell.java.
-    public int count;
+    private static int chunkSize = 4096; //this must be a power of 2, otherwise can't optimize row and col functions
+    private static int divShift = 12; // number of bits to shift right to do division by chunkSize (the bit position of chunkSize)
+    public Node[][] values;// { get; private set; }
+    public int count;// { get; private set; }
 
     public ChunkArray(int initialCapacity)
     {
