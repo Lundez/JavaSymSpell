@@ -23,6 +23,8 @@ package SymSpell;//        MIT License
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
@@ -171,7 +173,7 @@ public class SymSpell {
         if (!file.exists()) return false;
 
         SuggestionStage staging = new SuggestionStage(16384);
-        try (BufferedReader br = Files.newBufferedReader(Paths.get(corpus))) {
+        try (BufferedReader br = Files.newBufferedReader(Paths.get(corpus), StandardCharsets.UTF_8)) {
             for(String line; (line = br.readLine()) != null;){
                 String[] lineParts = line.split("\\s");
                 if (lineParts.length >= 2) {
