@@ -23,6 +23,8 @@ package SymSpell;//        MIT License
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -172,8 +174,40 @@ public class SymSpell {
         File file = new File(corpus);
         if (!file.exists()) return false;
 
+        BufferedReader br = null;
+        try {
+            br = Files.newBufferedReader(Paths.get(corpus), StandardCharsets.UTF_8);
+        }catch (IOException ex){
+            System.out.println(ex.getMessage());
+        }
+        if (br == null) { return false; }
+        return loadDictionary(br, termIndex, countIndex);
+    }
+
+    /// <summary>Load multiple dictionary entries from an input stream of word/frequency count pairs</summary>
+    /// <remarks>Merges with any dictionary data already loaded.</remarks>
+    /// <remarks>This is useful for loading the dictionary data from an asset file in Android.</remarks>
+    /// <param name="corpus">An input stream to dictionary data.</param>
+    /// <param name="termIndex">The column position of the word.</param>
+    /// <param name="countIndex">The column position of the frequency count.</param>
+    /// <returns>True if file loaded, or false if file not found.</returns>
+    public boolean loadDictionary(InputStream corpus, int termIndex, int countIndex) {
+        if (corpus == null) return false;
+        BufferedReader br = new BufferedReader(new InputStreamReader(corpus, StandardCharsets.UTF_8));
+        return loadDictionary(br, termIndex, countIndex);
+    }
+
+    /// <summary>Load multiple dictionary entries from an buffered reader of word/frequency count pairs</summary>
+    /// <remarks>Merges with any dictionary data already loaded.</remarks>
+    /// <param name="corpus">An buffered reader to dictionary data.</param>
+    /// <param name="termIndex">The column position of the word.</param>
+    /// <param name="countIndex">The column position of the frequency count.</param>
+    /// <returns>True if file loaded, or false if file not found.</returns>
+    public boolean loadDictionary(BufferedReader br, int termIndex, int countIndex) {
+        if (br == null) return false;
+        
         SuggestionStage staging = new SuggestionStage(16384);
-        try (BufferedReader br = Files.newBufferedReader(Paths.get(corpus), StandardCharsets.UTF_8)) {
+        try {
             for(String line; (line = br.readLine()) != null;){
                 String[] lineParts = line.split("\\s");
                 if (lineParts.length >= 2) {
