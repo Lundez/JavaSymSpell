@@ -213,8 +213,9 @@ public class SymSpell {
                 if (lineParts.length >= 2) {
                     String key = lineParts[termIndex];
                     long count;
-                    try {
-                        count = Long.parseUnsignedLong(lineParts[countIndex]);
+                    try{
+                        count = Long.parseLong(lineParts[countIndex]); 
+                        //count = Long.parseUnsignedLong(lineParts[countIndex]);
                         createDictionaryEntry(key, count, staging);
                     }catch (NumberFormatException ex){
                         System.out.println(ex.getMessage());
