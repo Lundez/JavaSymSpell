@@ -64,6 +64,7 @@ public class EditDistance {
     public int DamerauLevenshteinDistance(String string2, int maxDistance) {
         if (baseString == null) return string2 == null ? 0 : string2.length(); //string2 ?? "").Length;
         if (string2 == null || string2.isEmpty()) return baseString.length();
+        if(maxDistance == 0) return baseString.equals(string2) ? 0 : -1;
 
         // if strings of different lengths, ensure shorter string is in string1. This can result in a little
         // faster speed by spending more time spinning just the inner loop during the main processing.

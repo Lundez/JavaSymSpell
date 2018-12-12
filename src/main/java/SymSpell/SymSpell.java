@@ -1,4 +1,5 @@
-package SymSpell;//        MIT License
+package SymSpell;
+//        MIT License
 //
 //        Copyright (c) 2018 Hampus Londögård
 //
@@ -34,16 +35,17 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class SymSpell {
-    public enum Verbosity{
+    public enum Verbosity {
         Top,
         Closest,
         All
     }
+
     private static int defaultMaxEditDistance = 2;
-    private static int  defaultPrefixLength = 7;
-    private static int  defaultCountThreshold = 1;
-    private static int  defaultInitialCapacity = 16;
-    private static int  defaultCompactLevel = 5;
+    private static int defaultPrefixLength = 7;
+    private static int defaultCountThreshold = 1;
+    private static int defaultInitialCapacity = 16;
+    private static int defaultCompactLevel = 5;
     private int initialCapacity;
     private int maxDictionaryEditDistance;
     private int prefixLength; //prefix length  5..7
@@ -68,7 +70,7 @@ public class SymSpell {
     /// <param name="countThreshold">The minimum frequency count for dictionary words to be considered correct spellings.</param>
     /// <param name="compactLevel">Degree of favoring lower memory use over speed (0=fastest,most memory, 16=slowest,least memory).</param>
     public SymSpell(int initialCapacity, int maxDictionaryEditDistance, int prefixLength, int countThreshold)//,
-                    //byte compactLevel)
+    //byte compactLevel)
     {
         if (initialCapacity < 0) initialCapacity = defaultInitialCapacity;
         if (maxDictionaryEditDistance < 0) maxDictionaryEditDistance = defaultMaxEditDistance;
@@ -97,7 +99,8 @@ public class SymSpell {
     /// existing correctly spelled word.</returns>
     public boolean createDictionaryEntry(String key, long count, SuggestionStage staging) {
         if (count <= 0) {
-            if (this.countThreshold > 0) return false; // no point doing anything if count is zero, as it can't change anything
+            if (this.countThreshold > 0)
+                return false; // no point doing anything if count is zero, as it can't change anything
             count = 0;
         }
         long countPrevious;
@@ -115,8 +118,7 @@ public class SymSpell {
                 belowThresholdWords.put(key, count); // = count;
                 return false;
             }
-        }
-        else if (words.containsKey(key)) {
+        } else if (words.containsKey(key)) {
             countPrevious = words.get(key);
             // just update count if it's an already added above threshold word
             count = (Long.MAX_VALUE - countPrevious > count) ? countPrevious + count : Long.MAX_VALUE;
@@ -130,7 +132,7 @@ public class SymSpell {
 
         // what we have at this point is a new, above threshold word
         words.put(key, count);
-        if(key.equals("can't")) System.out.println("Added to words..!");
+        if (key.equals("can't")) System.out.println("Added to words..!");
 
         //edits/suggestions are created only once, no matter how often word occurs
         //edits/suggestions are created only as soon as the word occurs in the corpus,
@@ -141,7 +143,7 @@ public class SymSpell {
         HashSet<String> edits = editsPrefix(key);
 
         // if not staging suggestions, put directly into main data structure
-        if (staging != null){
+        if (staging != null) {
             edits.forEach(delete -> staging.add(getStringHash(delete), key));
         } else {
             if (deletes == null) this.deletes = new HashMap<>(initialCapacity); //initialisierung
@@ -149,7 +151,7 @@ public class SymSpell {
             edits.forEach(delete -> {
                 int deleteHash = getStringHash(delete);
                 String[] suggestions;
-                if (deletes.containsKey(deleteHash)){
+                if (deletes.containsKey(deleteHash)) {
                     suggestions = deletes.get(deleteHash);
                     String[] newSuggestions = Arrays.copyOf(suggestions, suggestions.length + 1);
                     deletes.put(deleteHash, newSuggestions);
@@ -177,10 +179,12 @@ public class SymSpell {
         BufferedReader br = null;
         try {
             br = Files.newBufferedReader(Paths.get(corpus), StandardCharsets.UTF_8);
-        }catch (IOException ex){
+        } catch (IOException ex) {
             System.out.println(ex.getMessage());
         }
-        if (br == null) { return false; }
+        if (br == null) {
+            return false;
+        }
         return loadDictionary(br, termIndex, countIndex);
     }
 
@@ -205,24 +209,24 @@ public class SymSpell {
     /// <returns>True if file loaded, or false if file not found.</returns>
     public boolean loadDictionary(BufferedReader br, int termIndex, int countIndex) {
         if (br == null) return false;
-        
+
         SuggestionStage staging = new SuggestionStage(16384);
         try {
-            for(String line; (line = br.readLine()) != null;){
+            for (String line; (line = br.readLine()) != null; ) {
                 String[] lineParts = line.split("\\s");
                 if (lineParts.length >= 2) {
                     String key = lineParts[termIndex];
                     long count;
-                    try{
-                        count = Long.parseLong(lineParts[countIndex]); 
+                    try {
+                        count = Long.parseLong(lineParts[countIndex]);
                         //count = Long.parseUnsignedLong(lineParts[countIndex]);
                         createDictionaryEntry(key, count, staging);
-                    }catch (NumberFormatException ex){
+                    } catch (NumberFormatException ex) {
                         System.out.println(ex.getMessage());
                     }
                 }
             }
-        }catch (IOException ex){
+        } catch (IOException ex) {
             System.out.println(ex.getMessage());
         }
         if (this.deletes == null) this.deletes = new HashMap<>(staging.deleteCount());
@@ -243,7 +247,7 @@ public class SymSpell {
             for (String line; (line = br.readLine()) != null; ) {
                 Arrays.stream(parseWords(line)).forEach(key -> createDictionaryEntry(key, 1, staging));
             }
-        }catch (IOException ex){
+        } catch (IOException ex) {
             System.out.println(ex.getMessage());
         }
 
@@ -255,6 +259,7 @@ public class SymSpell {
     public void purgeBelowThresholdWords() {
         belowThresholdWords = new HashMap<String, Long>();
     }
+
     /// <summary>Commit staged dictionary additions.</summary>
     /// <remarks>Used when you write your own process to load multiple words into the
     /// dictionary, and as part of that process, you first created a SuggestionsStage
@@ -273,6 +278,7 @@ public class SymSpell {
     public List<SuggestItem> lookup(String input, Verbosity verbosity) {
         return lookup(input, verbosity, maxDictionaryEditDistance);
     }
+
     /// <summary>Find suggested spellings for a given input word.</summary>
     /// <param name="input">The word being spell checked.</param>
     /// <param name="verbosity">The value controlling the quantity/closeness of the retuned suggestions.</param>
@@ -286,7 +292,8 @@ public class SymSpell {
 
         // maxEditDistance used in lookup can't be bigger than the maxDictionaryEditDistance
         // used to construct the underlying dictionary structure.
-        if (maxEditDistance > maxDictionaryEditDistance) throw new IllegalArgumentException("Dist to big: " + maxEditDistance);
+        if (maxEditDistance > maxDictionaryEditDistance)
+            throw new IllegalArgumentException("Dist to big: " + maxEditDistance);
 
         List<SuggestItem> suggestions = new ArrayList<>();
         int inputLen = input.length();
@@ -345,7 +352,7 @@ public class SymSpell {
                     int suggestionLen = suggestion.length();
 
                     if ((Math.abs(suggestionLen - inputLen) > maxEditDistance2) // input/suggestion diff > allowed/current best distance
-                            || (suggestionLen < candidateLen) // sugg must be for a different delete string, in same bin only because of hash collision
+                            || (suggestionLen < candidateLen) // sugg must be for a different delete String, in same bin only because of hash collision
                             || (suggestionLen == candidateLen && !suggestion.equals(candidate))) // if sugg len = delete len, then it either equals delete or is in same bin only because of hash collision
                         continue;
 
@@ -416,19 +423,19 @@ public class SymSpell {
             //add edits
             //derive edits (deletes) from candidate (input) and add them to candidates list
             //this is a recursive process until the maximum edit distance has been reached
-            if ((lengthDiff < maxEditDistance) && (candidateLen <= prefixLength))
-            {
+            if ((lengthDiff < maxEditDistance) && (candidateLen <= prefixLength)) {
                 //save some time
                 //do not create edits with edit distance smaller than suggestions already found
                 if (verbosity != Verbosity.All && lengthDiff >= maxEditDistance2) continue;
 
-                for (int i = 0; i < candidateLen; i++)
-                {
+                for (int i = 0; i < candidateLen; i++) {
                     StringBuilder sb = new StringBuilder(candidate);
                     sb.deleteCharAt(i);
                     String delete = sb.toString();
 
-                    if (consideredDeletes.add(delete)) { candidates.add(delete); }
+                    if (consideredDeletes.add(delete)) {
+                        candidates.add(delete);
+                    }
                 }
             }
         }
@@ -439,8 +446,9 @@ public class SymSpell {
     }
 
     public List<SuggestItem> lookupCompound(String input, int maxEditDistance) {
-        //parse input string into single terms
-        if(maxEditDistance > maxDictionaryEditDistance) throw new IllegalArgumentException("Dist to big " + maxEditDistance);
+        //parse input String into single terms
+        if (maxEditDistance > maxDictionaryEditDistance)
+            throw new IllegalArgumentException("Dist to big " + maxEditDistance);
         String[] termList1 = parseWords(input);
 
         List<SuggestItem> suggestions; //suggestions for a single term
@@ -450,18 +458,20 @@ public class SymSpell {
 
         //translate every term to its best suggestion, otherwise it remains unchanged
         boolean lastCombi = false;
-        for (int i = 0; i < termList1.length; i++){      // For each term do loop
+        for (int i = 0; i < termList1.length; i++) {      // For each term do loop
             suggestions = lookup(termList1[i], Verbosity.Top, maxEditDistance); // Get the normal suggestions,
 //            suggestions.forEach(it -> System.out.println("Suggestions: " + it.term));
             //combi check, always before split. i > 0 because we can't split on zero obviously.
-            if((i > 0) && !lastCombi) {
+            if ((i > 0) && !lastCombi) {
                 suggestionsCombi = lookup(termList1[i - 1] + termList1[i], Verbosity.Top, maxEditDistance);
 
                 if (!suggestionsCombi.isEmpty()) {
                     SuggestItem best1 = suggestionParts.get(suggestionParts.size() - 1);    // Grabbing the currently last part of sentence (i-1)
                     SuggestItem best2;
-                    if (!suggestions.isEmpty()) best2 = suggestions.get(0);                 // Getting the best suggestion of term (i)
-                    else best2 = new SuggestItem(termList1[i], maxEditDistance + 1, 0); // No suggestion -> it might be correct? (i)
+                    if (!suggestions.isEmpty())
+                        best2 = suggestions.get(0);                 // Getting the best suggestion of term (i)
+                    else
+                        best2 = new SuggestItem(termList1[i], maxEditDistance + 1, 0); // No suggestion -> it might be correct? (i)
 
                     editDistance = new EditDistance(termList1[i - 1] + " " + termList1[i], EditDistance.DistanceAlgorithm.Damerau);
                     if (suggestionsCombi.get(0).distance + 1 < editDistance.DamerauLevenshteinDistance(best1.term + " " + best2.term, maxEditDistance)) {
@@ -476,7 +486,7 @@ public class SymSpell {
             lastCombi = false;
 
             //always split terms without suggestion / never split terms with suggestion ed=0 / never split single char terms
-            if (!suggestions.isEmpty() && ((suggestions.get(0).distance==0) || (termList1[i].length() == 1))) {
+            if (!suggestions.isEmpty() && ((suggestions.get(0).distance == 0) || (termList1[i].length() == 1))) {
                 //choose best suggestion
                 suggestionParts.add(suggestions.get(0));
             } else {
@@ -489,18 +499,20 @@ public class SymSpell {
                 }
 
                 if (termList1[i].length() > 1) {
-                    for (int j=1; j < termList1[i].length(); j++) {      // Begin splitting! j=1 -> last. Shouldnt it be j.size - 1?
-                        String part1 = termList1[i].substring(0,j);
+                    for (int j = 1; j < termList1[i].length(); j++) {      // Begin splitting! j=1 -> last. Shouldnt it be j.size - 1?
+                        String part1 = termList1[i].substring(0, j);
                         String part2 = termList1[i].substring(j);
                         SuggestItem suggestionSplit;
                         List<SuggestItem> suggestions1 = lookup(part1, Verbosity.Top, maxEditDistance);
 
                         if (!suggestions1.isEmpty()) {
-                            if (!suggestions.isEmpty() && (suggestions.get(0).equals(suggestions1.get(0)))) continue; // suggestion top = split_1 suggestion top
+                            if (!suggestions.isEmpty() && (suggestions.get(0).equals(suggestions1.get(0))))
+                                continue; // suggestion top = split_1 suggestion top
                             List<SuggestItem> suggestions2 = lookup(part2, Verbosity.Top, maxEditDistance);
 
-                            if(!suggestions2.isEmpty()) {
-                                if (!suggestions.isEmpty() && (suggestions.get(0).equals(suggestions2.get(0)))) continue; //suggestion top = split_2 suggestion top
+                            if (!suggestions2.isEmpty()) {
+                                if (!suggestions.isEmpty() && (suggestions.get(0).equals(suggestions2.get(0))))
+                                    continue; //suggestion top = split_2 suggestion top
 
                                 //select best suggestion for split pair
                                 String split = suggestions1.get(0).term + " " + suggestions2.get(0).term;
@@ -508,15 +520,15 @@ public class SymSpell {
                                 suggestionSplit = new SuggestItem(split,
                                         editDistance.DamerauLevenshteinDistance(split, maxEditDistance),
                                         Math.min(suggestions1.get(0).count, suggestions2.get(0).count));
-                                if(suggestionSplit.distance >= 0) suggestionsSplit.add(suggestionSplit);
+                                if (suggestionSplit.distance >= 0) suggestionsSplit.add(suggestionSplit);
 
                                 //early termination of split
-                                if(suggestionSplit.distance == 1) break;
+                                if (suggestionSplit.distance == 1) break;
                             }
                         }
                     }
 
-                    if(!suggestionsSplit.isEmpty()) {
+                    if (!suggestionsSplit.isEmpty()) {
                         //select best suggestion for split pair
                         Collections.sort(suggestionsSplit);
                         suggestionParts.add(suggestionsSplit.get(0));
@@ -535,7 +547,7 @@ public class SymSpell {
 
         StringBuilder s = new StringBuilder();
 
-        for(SuggestItem si : suggestionParts){
+        for (SuggestItem si : suggestionParts) {
             s.append(si.term).append(" ");
             suggestion.count = Math.min(suggestion.count, si.count);
         }
@@ -550,14 +562,13 @@ public class SymSpell {
     }
 
     //public bool enableCompoundCheck = true;
-    //false: assumes input string as single term, no compound splitting / decompounding
+    //false: assumes input String as single term, no compound splitting / decompounding
     //true:  supports compound splitting / decompounding with three cases:
     //1. mistakenly inserted space into a correct word led to two incorrect terms
     //2. mistakenly omitted space between two correct words led to one incorrect combined term
     //3. multiple independent input terms with/without spelling errors
 
-    public List<SuggestItem> lookupCompound(String input)
-    {
+    public List<SuggestItem> lookupCompound(String input) {
         return lookupCompound(input, this.maxDictionaryEditDistance);
     }
 
@@ -565,8 +576,7 @@ public class SymSpell {
         if (deleteLen == 0) return true;
         if (prefixLength < suggestionLen) suggestionLen = prefixLength;
         int j = 0;
-        for (int i = 0; i < deleteLen; i++)
-        {
+        for (int i = 0; i < deleteLen; i++) {
             char delChar = delete.charAt(i);
             while (j < suggestionLen && delChar != suggestion.charAt(j)) j++;
             if (j == suggestionLen) return false;
@@ -579,7 +589,7 @@ public class SymSpell {
         Pattern pattern = Pattern.compile("['’\\p{L}-[_]]+");
         Matcher match = pattern.matcher(text.toLowerCase());
         List<String> matches = new ArrayList<>();
-        while(match.find()){
+        while (match.find()) {
             matches.add(match.group());
         }
         String[] toreturn = new String[matches.size()];
@@ -619,13 +629,153 @@ public class SymSpell {
 
         long hash = 2166136261L;
         for (int i = 0; i < len; i++) {
-                hash ^= s.charAt(i);
-                hash *= 16777619;
+            hash ^= s.charAt(i);
+            hash *= 16777619;
         }
 
         hash &= this.compactMask;
-        hash |= (long)lenMask;
-        return (int)hash;
+        hash |= (long) lenMask;
+        return (int) hash;
+    }
+
+    //######
+
+    //WordSegmentation divides a String into words by inserting missing spaces at the appropriate positions
+    //misspelled words are corrected and do not affect segmentation
+    //existing spaces are allowed and considered for optimum segmentation
+
+    //SymSpell.WordSegmentation uses a novel approach *without* recursion.
+    //https://medium.com/@wolfgarbe/fast-word-segmentation-for-noisy-text-2c2c41f9e8da
+    //While each String of length n can be segmentend in 2^n−1 possible compositions https://en.wikipedia.org/wiki/Composition_(combinatorics)
+    //SymSpell.WordSegmentation has a linear runtime O(n) to find the optimum composition
+
+    //number of all words in the corpus used to generate the frequency dictionary
+    //this is used to calculate the word occurrence probability p from word counts c : p=c/N
+    //N equals the sum of all counts c in the dictionary only if the dictionary is complete, but not if the dictionary is truncated or filtered
+    private static long N = 1024908267229L;  // TODO make dynamic man.
+
+    class SegmentedSuggestion {
+        String segmentedString = "", correctedString = "";
+        int distanceSum = 0;
+        double probabilityLogSum = 0.0;
+
+        SegmentedSuggestion() { }
+    }
+
+    /// <summary>Find suggested spellings for a multi-word input String (supports word splitting/merging).</summary>
+    /// <param name="input">The String being spell checked.</param>
+    /// <returns>The word segmented String,
+    /// the word segmented and spelling corrected String,
+    /// the Edit distance sum between input String and corrected String,
+    /// the Sum of word occurence probabilities in log scale (a measure of how common and probable the corrected segmentation is).</returns>
+    public SegmentedSuggestion wordSegmentation(String input) {
+        return wordSegmentation(input, this.maxDictionaryEditDistance, this.maxLength);
+    }
+
+    /// <summary>Find suggested spellings for a multi-word input String (supports word splitting/merging).</summary>
+    /// <param name="input">The String being spell checked.</param>
+    /// <param name="maxEditDistance">The maximum edit distance between input and corrected words
+    /// (0=no correction/segmentation only).</param>
+    /// <returns>The word segmented String,
+    /// the word segmented and spelling corrected String,
+    /// the Edit distance sum between input String and corrected String,
+    /// the Sum of word occurence probabilities in log scale (a measure of how common and probable the corrected segmentation is).</returns>
+    public SegmentedSuggestion wordSegmentation(String input, int maxEditDistance) {
+        return wordSegmentation(input, maxEditDistance, this.maxLength);
+    }
+
+    /// <summary>Find suggested spellings for a multi-word input String (supports word splitting/merging).</summary>
+    /// <param name="input">The String being spell checked.</param>
+    /// <param name="maxSegmentationWordLength">The maximum word length that should be considered.</param>
+    /// <param name="maxEditDistance">The maximum edit distance between input and corrected words
+    /// (0=no correction/segmentation only).</param>
+    /// <returns>The word segmented String,
+    /// the word segmented and spelling corrected String,
+    /// the Edit distance sum between input String and corrected String,
+    /// the Sum of word occurence probabilities in log scale (a measure of how common and probable the corrected segmentation is).</returns>
+    public SegmentedSuggestion wordSegmentation(String input, int maxEditDistance, int maxSegmentationWordLength) {
+        if(input.isEmpty()) {
+            return new SegmentedSuggestion();
+        }
+        int arraySize = Math.min(maxSegmentationWordLength, input.length());
+        SegmentedSuggestion[] compositions = new SegmentedSuggestion[arraySize];
+        for(int i = 0; i < arraySize; i++){
+            compositions[i] = new SegmentedSuggestion();
+        }
+
+        int circularIndex = -1;
+
+        //outer loop (column): all possible part start positions
+        for (int j = 0; j < input.length(); j++) {
+            //inner loop (row): all possible part lengths (from start position): part can't be bigger than longest word in dictionary (other than long unknown word)
+            int imax = Math.min(input.length() - j, maxSegmentationWordLength);
+            for (int i = 1; i <= imax; i++) {
+                //get top spelling correction/ed for part
+                String part = input.substring(j, j + i);
+                int separatorLength = 0;
+                int topEd = 0;
+                double topProbabilityLog;
+                String topResult;
+
+                if (Character.isWhitespace(part.charAt(0))) {
+                    //remove space for levensthein calculation
+                    part = part.substring(1);
+                } else {
+                    //add ed+1: space did not exist, had to be inserted
+                    separatorLength = 1;
+                }
+
+                //remove space from part1, add number of removed spaces to topEd
+                topEd += part.length();
+                //remove space
+                part = part.replace(" ", ""); //=System.Text.RegularExpressions.Regex.Replace(part1, @"\s+", "");
+                //add number of removed spaces to ed
+                topEd -= part.length();
+
+                List<SuggestItem> results = this.lookup(part, SymSpell.Verbosity.Top, maxEditDistance);
+                if (results.size() > 0) {
+                    topResult = results.get(0).term;
+                    topEd += results.get(0).distance;
+                    //Naive Bayes Rule
+                    //we assume the word probabilities of two words to be independent
+                    //therefore the resulting probability of the word combination is the product of the two word probabilities
+
+                    //instead of computing the product of probabilities we are computing the sum of the logarithm of probabilities
+                    //because the probabilities of words are about 10^-10, the product of many such small numbers could exceed (underflow) the floating number range and become zero
+                    //log(ab)=log(a)+log(b)
+                    topProbabilityLog = Math.log10((double) results.get(0).count / (double) N);
+                } else {
+                    topResult = part;
+                    //default, if word not found
+                    //otherwise long input text would win as long unknown word (with ed=edmax+1 ), although there there should many spaces inserted
+                    topEd += part.length();
+                    topProbabilityLog = Math.log10(10.0 / (N * Math.pow(10.0, part.length())));
+                }
+
+                int destinationIndex = ((i + circularIndex) % arraySize);
+
+                //set values in first loop
+                if (j == 0) {
+                    compositions[destinationIndex].segmentedString = part;
+                    compositions[destinationIndex].correctedString = topResult;
+                    compositions[destinationIndex].distanceSum = topEd;
+                    compositions[destinationIndex].probabilityLogSum = topProbabilityLog;
+                } else if ((i == maxSegmentationWordLength)
+                        //replace values if better probabilityLogSum, if same edit distance OR one space difference
+                        || (((compositions[circularIndex].distanceSum + topEd == compositions[destinationIndex].distanceSum) || (compositions[circularIndex].distanceSum + separatorLength + topEd == compositions[destinationIndex].distanceSum)) && (compositions[destinationIndex].probabilityLogSum < compositions[circularIndex].probabilityLogSum + topProbabilityLog))
+                        //replace values if smaller edit distance
+                        || (compositions[circularIndex].distanceSum + separatorLength + topEd < compositions[destinationIndex].distanceSum)) {
+                    compositions[destinationIndex].segmentedString = compositions[circularIndex].segmentedString + " " + part;
+                    compositions[destinationIndex].correctedString = compositions[circularIndex].correctedString + " " + topResult;
+                    compositions[destinationIndex].distanceSum = compositions[circularIndex].distanceSum + topEd;
+                    compositions[destinationIndex].probabilityLogSum = compositions[circularIndex].probabilityLogSum + topProbabilityLog;
+                }
+            }
+            circularIndex++;
+            if (circularIndex >= arraySize) circularIndex = 0;
+        }
+        return compositions[circularIndex];
+
     }
 }
 
