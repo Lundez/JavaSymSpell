@@ -132,7 +132,6 @@ public class SymSpell {
 
         // what we have at this point is a new, above threshold word
         words.put(key, count);
-        if (key.equals("can't")) System.out.println("Added to words..!");
 
         //edits/suggestions are created only once, no matter how often word occurs
         //edits/suggestions are created only as soon as the word occurs in the corpus,
@@ -460,7 +459,7 @@ public class SymSpell {
         boolean lastCombi = false;
         for (int i = 0; i < termList1.length; i++) {      // For each term do loop
             suggestions = lookup(termList1[i], Verbosity.Top, maxEditDistance); // Get the normal suggestions,
-//            suggestions.forEach(it -> System.out.println("Suggestions: " + it.term));
+
             //combi check, always before split. i > 0 because we can't split on zero obviously.
             if ((i > 0) && !lastCombi) {
                 suggestionsCombi = lookup(termList1[i - 1] + termList1[i], Verbosity.Top, maxEditDistance);
@@ -660,7 +659,8 @@ public class SymSpell {
         int distanceSum = 0;
         double probabilityLogSum = 0.0;
 
-        SegmentedSuggestion() { }
+        SegmentedSuggestion() {
+        }
     }
 
     /// <summary>Find suggested spellings for a multi-word input String (supports word splitting/merging).</summary>
@@ -695,12 +695,12 @@ public class SymSpell {
     /// the Edit distance sum between input String and corrected String,
     /// the Sum of word occurence probabilities in log scale (a measure of how common and probable the corrected segmentation is).</returns>
     public SegmentedSuggestion wordSegmentation(String input, int maxEditDistance, int maxSegmentationWordLength) {
-        if(input.isEmpty()) {
+        if (input.isEmpty()) {
             return new SegmentedSuggestion();
         }
         int arraySize = Math.min(maxSegmentationWordLength, input.length());
         SegmentedSuggestion[] compositions = new SegmentedSuggestion[arraySize];
-        for(int i = 0; i < arraySize; i++){
+        for (int i = 0; i < arraySize; i++) {
             compositions[i] = new SegmentedSuggestion();
         }
 
